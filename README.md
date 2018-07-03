@@ -1,4 +1,4 @@
-#Lexical analyser, Parser, AST to generate tokens for arithmatic expressions
+# Lexical analyser, Parser, AST to generate tokens for arithmatic expressions
 
 Screenshot
 (screenshot/Screenshot.png)
