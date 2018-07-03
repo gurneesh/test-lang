@@ -120,14 +120,14 @@ def lex_raw(text):
         yield token
         start = token.slice.stop
 
-"""
+
 def lex_skip_whitespace(text):
     for token in lex_raw(text):
         if token.type is TokenType.whitespace:
             continue
         yield token
-"""
-lex = lex_raw
+
+lex = lex_skip_whitespace
 
 if __name__ == '__main__':
     p = list(lex('print(68+778+(8*3)/25-19)'))

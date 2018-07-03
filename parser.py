@@ -43,8 +43,11 @@ class TokenStack:
 #Actual Parsing
 
 class ParseBase():
-    def __init__(self, token_stack):
+    def __init__(self, token_stack, module, builder, printf):
         self.token_stack = token_stack
+        self.module = module
+        self.builder = builder
+        self.printf = printf
         self.node = self.parse()
 
     def parse(self):
@@ -83,7 +86,7 @@ class BracketedExpression(ParseBase):
         expr_node = Expression(self.token_stack).node
         self.pop_expecting(TokenType.right_paren)
         return expr_node
-"""
+
 class PrintExpression(ParseBase):
     def parse(self):
         self.pop_expecting(TokenType.print)
@@ -91,13 +94,13 @@ class PrintExpression(ParseBase):
         expr_node = Expression(self.token_stack, self.module, self.builder, self.printf).node
         self.pop_expecting(TokenType.right_paren)
         #print('g',expr_node)
-        return ast.Print(self.modul, expr_node)
-"""
+        return ast.Print(self.module, self.builder, self.printf, expr_node)
+
 class PrimaryExpression(ParseBase):
     def try_to_parse(self, parser):
         try:
             self.token_stack.push_cursor()
-            return parser(self.token_stack).node, True
+            return parser(self.token_stack, self.module, self.builder, self.printf).node, True
         except ParseError as err:
             #print(err)
             self.token_stack.pop_cursor()
@@ -149,17 +152,17 @@ class BinaryOpExpression(ParseBase):
         '*': 30, '/': 30,
     }
     def parse(self):
-        primary = PrimaryExpression(self.token_stack).node
+        primary = PrimaryExpression(self.token_stack, self.module, self.builder, self.printf).node
         #print(primary)
         return self.parse_expression_(primary, 0)
 
     def parse_expression_(self, lhs, min_precedence):
         while self.next_is_binary_() and self.precedence_() >= min_precedence:
             op_token = self.token_stack.pop()
-            rhs = PrimaryExpression(self.token_stack).node
+            rhs = PrimaryExpression(self.token_stack, self.module, self.builder, self.printf).node
             while self.next_is_binary_() and self.precedence_()>self.precedence_(op_token):
                 rhs = self.parse_expression_(rhs, self.precedence_())
-            lhs = ast.BinaryOpExpression(lhs, op_token.value, rhs)
+            lhs = ast.BinaryOpExpression(lhs, op_token.value, rhs, self.module, self.builder, self.printf)
         return lhs
 
     def next_is_binary_(self):

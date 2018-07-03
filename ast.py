@@ -15,16 +15,30 @@ class IntegerLiteral:
     def to_dict(self):
         return { 'type': __class__.__name__, 'value': self.value }
 
+    def eval(self):
+        i = ir.Constant(ir.IntType(8), int(self.value))
+        return i
+
 class UnaryOpExpression:
-    def __init__(self, op, rhs):
+    def __init__(self, op, rhs, module, builder, printf):
         self.op = op
         self.rhs = rhs
+        self.module = module
+        self.builder = builder
+        self.printf = printf
 
     def __repr__(self):
         return __class__.__name__ + '(op=' + '\'' + self.op + '\'' + ', ' +  ' rhs=' + str(self.rhs) + ')'
 
     def to_dict(self):
         return { 'type': __class__.__name__, 'op': self.op, 'rhs': self.rhs.to_dict() }
+
+    def eval(self):
+        if self.op == '+':
+            return self.rhs
+        elif self.op == '-':
+            i = ir.Constant(ir.IntType(8), int((-1)*self.value))
+            return i
 """
 class BinaryOp():
     def _init__(self, builder, module, left, right):
@@ -34,18 +48,38 @@ class BinaryOp():
         self.right
 """
 
-class BinaryOpExpression():
-    def __init__(self, lhs, op, rhs):
+class BinaryOpExpression:
+    def __init__(self, lhs, op, rhs, module, builder, printf):
         self.lhs = lhs
         self.op = op
         self.rhs = rhs
+        self.module = module
+        self.builder = builder
+        self.printf = printf
 
     def __repr__(self):
         return __class__.__name__ + '(lhs=' + str(self.lhs) + ',' + ' op=' + '\'' + self.op + '\'' + ', ' +  ' rhs=' + str(self.rhs) + ')'
 
     def to_dict(self):
         return { 'type': __class__.__name__, 'lhs': self.lhs.to_dict(), 'op': self.op, 'rhs': self.rhs.to_dict() }
-"""
+
+    
+    def eval(self):
+        if self.op == '+':
+            i = self.builder.add(self.lhs.eval(), self.rhs.eval())
+            return i
+        elif self.op == '-':
+            i = self.builder.sub(self.lhs.eval(), self.rhs.eval())
+            return i
+        elif self.op == '*':
+            i = self.builder.mul(self.lhs.eval(), self.rhs.eval())
+            return i 
+        elif self.op == '/':
+            i = self.builder.sdiv(self.lhs.eval(), self.rhs.eval())
+            return i
+        else:
+            raise NotImplementedError()
+
 class Print():
     def __init__(self, module, builder, printf, value):
         self.module = module
@@ -69,7 +103,7 @@ class Print():
 
         # Call Print Function
         self.builder.call(self.printf, [fmt_arg, value])
-"""
+
 if __name__=='__main__':
     from llvmlite import ir, binding
     block = base_func.append_basic_block(name="entry")
